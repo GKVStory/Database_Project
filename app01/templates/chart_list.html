@@ -1,0 +1,187 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+
+{% block content %}
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading"></div>
+            <div class="panel-body">
+                <div id="m1" style="width: 100%;height: 300px"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="panel panel-default">
+                    <div class="panel-heading"></div>
+                    <div class="panel-body">
+                        <div id="m2" style="width: 100%;height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading"></div>
+                    <div class="panel-body">
+                        <div id="m3" style="width: 100%;height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/echarts.js' %}"></script>
+    <script type="text/javascript">
+        $(function () {
+            initLine();
+            initBar();
+            initPie();
+        })
+
+        // 初始化折线图
+        function initLine() {
+            let myChart = echarts.init(document.getElementById('m1'));
+            let option = {
+                title: {
+                    text: '各部门薪资年龄趋势图',
+                    left: "center",
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: [],
+                    bottom: 0
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {}
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: [],
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: []
+            };
+
+
+            $.ajax({
+                url: '/chart/line/',
+                type: "get",
+                dataType: "JSON",
+                success: function (res) {
+                    if (res.status) {
+                        option.legend.data = res.data.legend;
+                        option.xAxis.data = res.data.x_axis;
+                        option.series = res.data.series_list;
+
+                        myChart.setOption(option);
+                    }
+                }
+            })
+
+
+        }
+
+        // 初始化柱状图
+        function initBar() {
+            let myChart = echarts.init(document.getElementById('m2'));
+            let option = {
+                title: {
+                    text: '部门人员年龄段分布',
+                    textAlign: "auto",
+                    left: "center",
+                },
+                tooltip: {},
+                legend: {
+                    data: [],  // 后台获取
+                    bottom: 0
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {}
+                    }
+                },
+                xAxis: {
+                    data: []  // 后台获取
+                },
+                yAxis: {},
+                series: []  // 后台获取
+            };
+
+            $.ajax({
+                url: "/chart/bar/",
+                type: "get",
+                dataType: "JSON",
+                success: function (res) {
+                    // 将后台返回的数据，更新到option中。
+                    if (res.status) {
+                        option.legend.data = res.data.legend;
+                        option.xAxis.data = res.data.x_axis;
+                        option.series = res.data.series_list;
+
+                        myChart.setOption(option);
+                    }
+                }
+            })
+
+
+        }
+
+
+        // 初始化饼状图
+        function initPie() {
+            let myChart = echarts.init(document.getElementById('m3'));
+            let option = {
+                title: {
+                    text: '号码等级比例图',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '数量',
+                        type: 'pie',
+                        radius: '40%',
+                        data: [],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            };
+
+            $.ajax({
+                url: "/chart/pie/",
+                type: "get",
+                dataType: "JSON",
+                success: function (res) {
+                    if (res.status) {
+                        option.series[0].data = res.data;
+                        myChart.setOption(option);
+                    }
+                }
+            })
+
+        }
+
+    </script>
+{% endblock %}
